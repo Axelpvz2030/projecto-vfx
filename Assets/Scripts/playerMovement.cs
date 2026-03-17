@@ -6,6 +6,10 @@ using UnityEngine.InputSystem;
 [RequireComponent(typeof(CharacterController))]
 public class PlayerMovement : MonoBehaviour
 {
+    [Header("Camera Dependencies")]
+    [Tooltip("Arrastra el CameraManager aquí para saber qué cámara está activa.")]
+    public CameraController cameraManager;
+
     [Header("Movement Settings")]
     [Tooltip("Velocidad de movimiento estándar del jugador.")]
     public float moveSpeed = 7.0f;
@@ -29,7 +33,7 @@ public class PlayerMovement : MonoBehaviour
     private Vector3 moveDirection;
     private Vector3 dashDirection;
     
-    // NUEVO: Guardamos la última dirección. Iniciamos en Vector3.forward por si hace dash nada más empezar.
+    // Guardamos la última dirección. Iniciamos en Vector3.forward por si hace dash nada más empezar.
     private Vector3 lastMoveDirection = Vector3.forward; 
     
     private float currentCooldown;
@@ -44,10 +48,6 @@ public class PlayerMovement : MonoBehaviour
     {
         controller = GetComponent<CharacterController>();
 
-        if (model == null)
-        {
-            Debug.LogWarning("No has asignado el 'Model' en el script. La rotación no funcionará.");
-        }
     }
 
     private void Update()
@@ -74,9 +74,29 @@ public class PlayerMovement : MonoBehaviour
         if (Keyboard.current.wKey.isPressed) verticalInput += 1f;
         if (Keyboard.current.sKey.isPressed) verticalInput -= 1f;
 
-        moveDirection = new Vector3(horizontalInput, 0f, verticalInput).normalized;
+        Vector3 inputDirection = new Vector3(horizontalInput, 0f, verticalInput).normalized;
 
-        // NUEVO: Si nos estamos moviendo, actualizamos la última dirección conocida
+        // Si la cámara orbital está activa, el movimiento es relativo a la cámara
+        if (cameraManager != null && cameraManager.isOrbitalActive && Camera.main != null)
+        {
+            Vector3 camForward = Camera.main.transform.forward;
+            Vector3 camRight = Camera.main.transform.right;
+
+            // Aplanar los vectores para no movernos hacia arriba/abajo en el eje Y
+            camForward.y = 0f;
+            camRight.y = 0f;
+            camForward.Normalize();
+            camRight.Normalize();
+
+            moveDirection = (camForward * verticalInput + camRight * horizontalInput).normalized;
+        }
+        else
+        {
+            // Movimiento global fijo (Modo Top-Down)
+            moveDirection = inputDirection;
+        }
+
+        // Actualizamos la última dirección conocida (para el dash)
         if (moveDirection.sqrMagnitude > 0.1f)
         {
             lastMoveDirection = moveDirection;
@@ -85,10 +105,7 @@ public class PlayerMovement : MonoBehaviour
         // 2. Procesar Dash (Barra Espaciadora)
         if (Keyboard.current.spaceKey.wasPressedThisFrame && currentCooldown <= 0 && !isDashing)
         {
-            // Ahora el dash SIEMPRE usa la última dirección registrada,
-            // asegurando que vaya hacia donde mira el modelo, incluso si estás quieto.
             dashDirection = lastMoveDirection;
-
             isDashing = true;
             dashTimer = dashDuration;
             currentCooldown = dashCooldown; 
@@ -127,7 +144,7 @@ public class PlayerMovement : MonoBehaviour
 
         controller.Move(finalMovement * Time.deltaTime);
 
-        
+        // Rotación del modelo
         if (model != null && moveDirection.sqrMagnitude > 0.1f && !isDashing)
         {
             Quaternion targetRotation = Quaternion.LookRotation(moveDirection);

@@ -37,7 +37,7 @@ public class PlayerMovement : MonoBehaviour
     private Vector3 lastMoveDirection = Vector3.forward; 
     
     private float currentCooldown;
-    private bool isDashing;
+    public bool isDashing;
     private float dashTimer;
 
     // Variables básicas de gravedad

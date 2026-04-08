@@ -154,9 +154,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7442532c3494e054991231809a9c9be6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProjectileMovement
-  speed: 5
+  speed: 10
   flightTime: 3
-  lifetimeAfterFlight: 5
+  lifetimeAfterFlight: 1
 --- !u!114 &8421465580057245409
 MonoBehaviour:
   m_ObjectHideFlags: 0

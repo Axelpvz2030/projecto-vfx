@@ -9,14 +9,14 @@ public class PlayerAttack : MonoBehaviour
     public GameObject attackHurtbox; 
     public float attackDuration = 0.5f;
 
-    private bool isAttacking = false;
+    // Made public so PlayerShield.cs can read it
+    public bool isAttacking = false; 
     private PlayerMovement playerMovement;
 
     private void Start()
     {
         playerMovement = GetComponent<PlayerMovement>();
         
-        // Ensure the hurtbox is off by default
         if (attackHurtbox != null)
         {
             attackHurtbox.SetActive(false);
@@ -25,8 +25,10 @@ public class PlayerAttack : MonoBehaviour
 
     private void Update()
     {
-        // Listen for Left Mouse Button
-        if (!isAttacking && Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
+        // Ensure you cannot attack while shielding
+        bool isShielding = (playerMovement != null && playerMovement.isShielding);
+
+        if (!isAttacking && !isShielding && Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
         {
             StartCoroutine(PerformAttack());
         }
@@ -36,19 +38,14 @@ public class PlayerAttack : MonoBehaviour
     {
         isAttacking = true;
         
-        // Stop movement input, but keep the script running for gravity
         if (playerMovement != null) playerMovement.canMove = false;
         
-        // Activate the hurtbox child object
         if (attackHurtbox != null) attackHurtbox.SetActive(true);
 
-        // Wait for the duration of the attack
         yield return new WaitForSeconds(attackDuration);
 
-        // Deactivate the hurtbox
         if (attackHurtbox != null) attackHurtbox.SetActive(false);
         
-        // Allow movement input again
         if (playerMovement != null) playerMovement.canMove = true;
         
         isAttacking = false;

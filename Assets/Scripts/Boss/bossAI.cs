@@ -161,4 +161,20 @@ public class BossAI : MonoBehaviour
         // Restart the cycle starting with a teleport
         currentCycle = StartCoroutine(CombatCycle());
     }
+
+    public void HandleDeath()
+    {
+        // Stop the CombatCycle and any Teleport sequences
+        StopAllCoroutines(); 
+        
+        // Cancel the specific attack script if one is currently firing
+        if (currentAttackScript != null)
+        {
+            currentAttackScript.CancelAttack();
+            currentAttackScript = null;
+        }
+
+        isAttacking = false;
+        lookAtPlayer = false;
+    }
 }

@@ -28,14 +28,26 @@ public class BossHealth : MonoBehaviour
         
         Debug.Log($"Boss hit! Took {damagePerHit} damage. Current HP: {currentHealth}");
 
-        // --- NEW CODE HERE ---
         BossAI ai = GetComponent<BossAI>();
-        if (ai != null) ai.InterruptAndForceTeleport();
-        // ---------------------
 
         if (currentHealth <= 0)
         {
-            Debug.Log("Boss Defeated!");
+            Debug.Log("Boss Defeated! Deactivating AI and Health scripts.");
+            
+            if (ai != null) 
+            {
+                // Force the AI to stop all its loops before turning it off
+                ai.HandleDeath(); 
+                ai.enabled = false;
+            }
+
+            // Deactivate this health script so it can't be hit again
+            this.enabled = false; 
+        }
+        else
+        {
+            // Only interrupt and teleport if the boss survived the hit
+            if (ai != null) ai.InterruptAndForceTeleport();
         }
     }
 }

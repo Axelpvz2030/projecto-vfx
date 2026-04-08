@@ -27,6 +27,9 @@ public class PlayerMovement : MonoBehaviour
     [Header("Components")]
     [Tooltip("El Transform hijo que representa el modelo visual que rotará.")]
     public Transform model;
+    
+    [Header("State")]
+    public bool canMove = true;
 
     // Componentes y variables de estado
     private CharacterController controller;
@@ -47,7 +50,6 @@ public class PlayerMovement : MonoBehaviour
     private void Start()
     {
         controller = GetComponent<CharacterController>();
-
     }
 
     private void Update()
@@ -64,6 +66,13 @@ public class PlayerMovement : MonoBehaviour
     private void HandleInput()
     {
         if (Keyboard.current == null) return;
+
+        // Si no puede moverse (ej. atacando), detenemos la dirección y saltamos el resto del input
+        if (!canMove)
+        {
+            moveDirection = Vector3.zero;
+            return;
+        }
 
         // 1. Procesar movimiento (WASD)
         float horizontalInput = 0f;

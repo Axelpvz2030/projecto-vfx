@@ -21,10 +21,12 @@ public class PlayerHealth : MonoBehaviour
     [Tooltip("Duration of i-frames after taking damage.")]
     public float invulnerabilityDuration = 1.0f;
     
-    // We will only store the specific Renderer of "playerModel"
-    private Renderer targetRenderer;
+    [Header("Model References")]
+    [Tooltip("Drag your 3D Model here. The script will automatically find all its renderers to make them blink.")]
+    public Transform playerModel; // <--- This is the magic variable!
     
-    // Reference to the movement script to check if dashing
+    // We use an array now so we can blink EVERY part of your 3D model
+    private Renderer[] targetRenderers;
     private PlayerMovement playerMovement;
 
     public bool isInvulnerable { get; private set; }
@@ -35,36 +37,28 @@ public class PlayerHealth : MonoBehaviour
         healsRemaining = maxHeals;
         isInvulnerable = false;
 
-        // Grab the movement script so we can check for dash i-frames
         playerMovement = GetComponent<PlayerMovement>();
 
-        // AUTOMATIC SETUP: Search through all children and grandchildren
-        Transform[] allChildren = GetComponentsInChildren<Transform>();
-        
-        foreach (Transform child in allChildren)
+        // Grab ALL renderers attached to whatever model you dragged into the Inspector
+        if (playerModel != null)
         {
-            if (child.name == "playerModel")
+            targetRenderers = playerModel.GetComponentsInChildren<Renderer>();
+            
+            if (targetRenderers.Length == 0)
             {
-                targetRenderer = child.GetComponent<Renderer>();
-                break; // Stop searching once we find it
+                Debug.LogWarning("PlayerHealth: The assigned playerModel has no Renderer components on it or its children.");
             }
         }
-
-        if (targetRenderer == null)
+        else
         {
-            Debug.LogWarning("PlayerHealth: Could not find an object named 'playerModel' or it lacks a Renderer component.");
+            Debug.LogWarning("PlayerHealth: No playerModel assigned in the Inspector! The player will not blink when hit.");
         }
     }
 
     private void Update()
     {
-        // Reduce the healing cooldown if active
-        if (cooldownTimer > 0)
-        {
-            cooldownTimer -= Time.deltaTime;
-        }
+        if (cooldownTimer > 0) cooldownTimer -= Time.deltaTime;
 
-        // Detect healing input (E Key)
         if (Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame)
         {
             TryHeal();
@@ -75,10 +69,7 @@ public class PlayerHealth : MonoBehaviour
     {
         if (healsRemaining > 0 && cooldownTimer <= 0 && currentHealth < maxHealth)
         {
-            // Heal 50% of maximum health
             currentHealth += (maxHealth * 0.5f);
-            
-            // Ensure we don't exceed maximum health
             currentHealth = Mathf.Min(currentHealth, maxHealth);
 
             healsRemaining--;
@@ -102,7 +93,6 @@ public class PlayerHealth : MonoBehaviour
 
     public bool TakeDamage(float amount)
     {
-        // If the player is invulnerable from a hit OR currently dashing, ignore the damage completely!
         if (isInvulnerable || (playerMovement != null && playerMovement.isDashing) || currentHealth <= 0) 
         {
             return false;
@@ -132,32 +122,37 @@ public class PlayerHealth : MonoBehaviour
 
         while (timer < invulnerabilityDuration)
         {
-            // Toggle ONLY the playerModel renderer on or off
-            if (targetRenderer != null) targetRenderer.enabled = !targetRenderer.enabled;
+            if (targetRenderers != null)
+            {
+                // Loop through every single piece of the 3D model and toggle it
+                foreach (Renderer r in targetRenderers)
+                {
+                    if (r != null) r.enabled = !r.enabled;
+                }
+            }
             
             yield return new WaitForSeconds(flickerSpeed);
             timer += flickerSpeed;
         }
 
-        // Ensure it remains visible when finished
-        if (targetRenderer != null) targetRenderer.enabled = true;
+        if (targetRenderers != null)
+        {
+            // Make sure everything is turned back on at the end
+            foreach (Renderer r in targetRenderers)
+            {
+                if (r != null) r.enabled = true;
+            }
+        }
         isInvulnerable = false;
     }
 
     private void HandleDeath()
     {
-        
         transform.position = new Vector3(0f, transform.position.y, 0f);
-        
         Debug.Log($"Health reset to {currentHealth} after death.");
         
-        // Temporarily disable the CharacterController
         CharacterController cc = GetComponent<CharacterController>();
         if (cc != null) cc.enabled = false;
-        
-        // Move to X=0, Z=0, but keep current Y height
-        
-        // Re-enable it
         if (cc != null) cc.enabled = true;
     }
 }

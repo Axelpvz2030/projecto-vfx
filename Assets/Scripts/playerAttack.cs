@@ -5,9 +5,11 @@ using UnityEngine.InputSystem;
 public class PlayerAttack : MonoBehaviour
 {
     [Header("Attack Settings")]
-    [Tooltip("Drag the child GameObject with the trigger collider here.")]
     public GameObject attackHurtbox; 
     public float attackDuration = 0.5f;
+    
+    [Header("Components")]
+    public Animator animator; // <--- NEW ANIMATOR REFERENCE
 
     // Made public so PlayerShield.cs can read it
     public bool isAttacking = false; 
@@ -39,13 +41,14 @@ public class PlayerAttack : MonoBehaviour
         isAttacking = true;
         
         if (playerMovement != null) playerMovement.canMove = false;
-        
         if (attackHurtbox != null) attackHurtbox.SetActive(true);
+
+        // --- NEW ANIMATOR CODE ---
+        if (animator != null) animator.SetTrigger("Attack");
 
         yield return new WaitForSeconds(attackDuration);
 
         if (attackHurtbox != null) attackHurtbox.SetActive(false);
-        
         if (playerMovement != null) playerMovement.canMove = true;
         
         isAttacking = false;

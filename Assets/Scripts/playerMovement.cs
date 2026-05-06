@@ -10,6 +10,12 @@ public class PlayerMovement : MonoBehaviour
     [Tooltip("Arrastra el CameraManager aquí para saber qué cámara está activa.")]
     public CameraController cameraManager;
 
+    [Header("Environment")]
+    [Tooltip("Drag the Arena's BoxCollider here to detect when the player falls off.")]
+    public BoxCollider arenaBounds;
+    [Tooltip("How far below the arena the player must fall before dying.")]
+    public float fallThreshold = 2f;
+
     [Header("Movement Settings")]
     public float moveSpeed = 7.0f;
     public float rotationSpeed = 10.0f;
@@ -21,12 +27,15 @@ public class PlayerMovement : MonoBehaviour
 
     [Header("Components")]
     public Transform model;
+    public Animator animator; 
     
     [Header("State")]
     public bool canMove = true;
     public bool isShielding = false; 
 
     private CharacterController controller;
+    private PlayerHealth playerHealth; // NEW: Reference to health for instant kills
+    
     private Vector3 moveDirection;
     private Vector3 targetRotationDirection; 
     private Vector3 dashDirection;
@@ -36,30 +45,33 @@ public class PlayerMovement : MonoBehaviour
     public bool isDashing;
     private float dashTimer;
 
+    private Vector3 knockbackVelocity = Vector3.zero;
+    private float knockbackTimer = 0f;
+
     private float verticalVelocity;
     private float gravity = -9.81f;
 
     private void Start()
     {
         controller = GetComponent<CharacterController>();
+        playerHealth = GetComponent<PlayerHealth>(); // Grab the health script
     }
 
     private void Update()
     {
-        if (currentCooldown > 0)
-        {
-            currentCooldown -= Time.deltaTime;
-        }
+        if (currentCooldown > 0) currentCooldown -= Time.deltaTime;
 
         HandleInput();
         ApplyMovementAndRotation();
+        
+        // NEW: Check if we fell off the map every frame
+        CheckFallOutBounds(); 
     }
 
     private void HandleInput()
     {
         if (Keyboard.current == null) return;
 
-        // Si no puede moverse por un ataque, detenemos todo
         if (!canMove && !isShielding)
         {
             moveDirection = Vector3.zero;
@@ -67,7 +79,6 @@ public class PlayerMovement : MonoBehaviour
             return;
         }
 
-        // 1. Procesar input puro (WASD)
         float horizontalInput = 0f;
         float verticalInput = 0f;
 
@@ -78,7 +89,6 @@ public class PlayerMovement : MonoBehaviour
 
         Vector3 inputDirection = new Vector3(horizontalInput, 0f, verticalInput).normalized;
 
-        // Configuración de movimiento y rotación basada en cámara y escudo
         if (cameraManager != null && cameraManager.isOrbitalActive && Camera.main != null)
         {
             Vector3 camForward = Camera.main.transform.forward;
@@ -93,28 +103,26 @@ public class PlayerMovement : MonoBehaviour
 
             if (isShielding)
             {
-                moveDirection = Vector3.zero; // No moverse
-                
-                // CHANGED: Usar el input WASD relativo a la cámara para rotar mientras te cubres
+                moveDirection = Vector3.zero; 
                 targetRotationDirection = camRelativeMovement; 
             }
             else
             {
                 moveDirection = camRelativeMovement;
-                targetRotationDirection = moveDirection; // Mirar hacia donde se camina
+                targetRotationDirection = moveDirection; 
             }
         }
-        else // Top-Down Mode
+        else 
         {
             if (isShielding)
             {
-                moveDirection = Vector3.zero; // No moverse
-                targetRotationDirection = inputDirection; // Rotar usando WASD libremente
+                moveDirection = Vector3.zero; 
+                targetRotationDirection = inputDirection; 
             }
             else
             {
                 moveDirection = inputDirection;
-                targetRotationDirection = moveDirection; // Mirar hacia donde se camina
+                targetRotationDirection = moveDirection; 
             }
         }
 
@@ -123,7 +131,6 @@ public class PlayerMovement : MonoBehaviour
             lastMoveDirection = moveDirection;
         }
 
-        // 2. Procesar Dash (Solo si no estamos usando el escudo)
         if (!isShielding && Keyboard.current.spaceKey.wasPressedThisFrame && currentCooldown <= 0 && !isDashing)
         {
             dashDirection = lastMoveDirection;
@@ -131,6 +138,12 @@ public class PlayerMovement : MonoBehaviour
             dashTimer = dashDuration;
             currentCooldown = dashCooldown; 
         }
+    }
+
+    public void ApplyKnockback(Vector3 direction, float force, float duration)
+    {
+        knockbackVelocity = direction * force;
+        knockbackTimer = duration;
     }
 
     private void ApplyMovementAndRotation()
@@ -157,14 +170,54 @@ public class PlayerMovement : MonoBehaviour
             finalMovement = moveDirection * moveSpeed;
         }
 
+        if (knockbackTimer > 0)
+        {
+            finalMovement += knockbackVelocity;
+            knockbackTimer -= Time.deltaTime;
+        }
+
         finalMovement.y = verticalVelocity;
         controller.Move(finalMovement * Time.deltaTime);
 
-        // Usamos targetRotationDirection en lugar de moveDirection para rotar el modelo
         if (model != null && targetRotationDirection.sqrMagnitude > 0.1f && !isDashing)
         {
             Quaternion targetRotation = Quaternion.LookRotation(targetRotationDirection);
             model.rotation = Quaternion.Slerp(model.rotation, targetRotation, rotationSpeed * Time.deltaTime);
+        }
+
+        if (animator != null)
+        {
+            animator.SetBool("isDashing", isDashing);
+            animator.SetBool("isShielding", isShielding);
+            animator.SetBool("isMoving", moveDirection.sqrMagnitude > 0.1f);
+        }
+    }
+
+    // --- NEW FALL DEATH LOGIC ---
+    private void CheckFallOutBounds()
+    {
+        if (arenaBounds != null && playerHealth != null)
+        {
+            // Find the lowest point of the arena's collider
+            float lowestPoint = arenaBounds.bounds.min.y;
+
+            // If the player falls past this point (plus our threshold delay)
+            if (transform.position.y < lowestPoint - fallThreshold)
+            {
+                Debug.Log("Player fell out of bounds!");
+
+                // 1. Temporarily disable the controller so we can force a teleport
+                controller.enabled = false;
+                
+                // 2. Move them back to the center of the arena bounds, safely above the floor
+                transform.position = new Vector3(arenaBounds.bounds.center.x, arenaBounds.bounds.max.y + 1f, arenaBounds.bounds.center.z);
+                
+                // 3. Re-enable the controller
+                controller.enabled = true;
+
+                // 4. Force instant death (bypassing any standard damage numbers)
+                playerHealth.TakeDamage(99999f); 
+            }
         }
     }
 }

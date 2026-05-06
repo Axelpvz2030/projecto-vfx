@@ -1,0 +1,14 @@
+World
+  body
+    leftLeg
+      subLeftLeg
+    torso
+      head
+      rightArm
+        subRightArm
+          shield
+      leftArm
+        subLeftArm
+          sword
+    rightLeg
+      subRightLeg

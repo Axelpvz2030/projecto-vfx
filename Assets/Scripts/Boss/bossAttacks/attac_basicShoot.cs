@@ -4,10 +4,15 @@ using UnityEngine;
 public class Attack_BasicShoot : BossAttack
 {
     [Header("Attack Settings")]
+    [Tooltip("Time to wait before firing the first projectile.")]
+    public float startDelay = 1.0f; // <--- NEW VARIABLE
     public ProjectileSpawner spawner;
     public int projectilesToFire = 5;
-    [Tooltip("Time between each projectile (you asked for 5s, but I made it a variable so you can tweak it to 0.5s if 5s is too slow!).")]
+    [Tooltip("Time between each projectile.")]
     public float timeBetweenShots = 5f;
+
+    [Header("Animation Settings")]
+    public Animator animator;
 
     private bool isCancelled = false;
 
@@ -15,34 +20,48 @@ public class Attack_BasicShoot : BossAttack
     {
         isCancelled = false;
         
-        // Example: Maybe this attack locks the boss's rotation while firing
-        //bossAI.lookAtPlayer = false; 
+        // 1. Start the animation so the boss strikes a pose
+        if (animator != null)
+        {
+            animator.SetBool("isShooting", true);
+        }
 
+        // 2. Wind-up delay before the first shot
+        yield return new WaitForSeconds(startDelay);
+
+        // 3. Fire the projectiles
         for (int i = 0; i < projectilesToFire; i++)
         {
             if (isCancelled) yield break; // Stop immediately if we got hit
 
-            // Force the spawner to fire instantly since it's an instant spawn bypass in your spawner script
             if (spawner != null)
             {
                 spawner.SetSpawnerActive(true);
             }
 
-            // Wait before the next shot
             yield return new WaitForSeconds(timeBetweenShots);
         }
 
-        //bossAI.lookAtPlayer = true;
+        // 4. Stop the animation when finished
+        if (animator != null)
+        {
+            animator.SetBool("isShooting", false);
+        }
     }
 
     public override void CancelAttack()
     {
         isCancelled = true;
         
-        // Ensure the spawner is turned off if interrupted mid-charge
         if (spawner != null)
         {
             spawner.SetSpawnerActive(false);
+        }
+
+        // Stop the animation if the boss gets interrupted!
+        if (animator != null)
+        {
+            animator.SetBool("isShooting", false);
         }
     }
 }

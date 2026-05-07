@@ -6,7 +6,7 @@ public class Hurtbox : MonoBehaviour
     public bool isActive = true;
     public float damage = 10f;
     
-    [Tooltip("Should the object be destroyed upon hitting the player? (Ideal for projectiles)")]
+
     public bool destroyOnContact = false;
 
     // OnTriggerStay is better than OnTriggerEnter here. 

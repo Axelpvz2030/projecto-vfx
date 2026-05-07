@@ -15,6 +15,9 @@ public class Attack_StarCone : BossAttack
     [Tooltip("Maximum angle (in degrees) the projectile can deviate left or right.")]
     public float spreadAngle = 30f;
 
+    [Header("Animation Settings")]
+    public Animator animator;
+
     private bool isCancelled = false;
     private Quaternion originalLocalRotation;
 
@@ -22,46 +25,49 @@ public class Attack_StarCone : BossAttack
     {
         isCancelled = false;
         
-        // Save the spawner's default rotation so we don't permanently break its aim
+        // Save the spawner's default rotation
         if (spawner != null) 
         {
             originalLocalRotation = spawner.transform.localRotation;
         }
 
-        // Freeze the boss's rotation so the cone stays focused on where the player WAS 
-        // when the attack started, rather than perfectly tracking them the whole time.
         bossAI.lookAtPlayer = false; 
 
-        // 1. Initial wind-up delay
+        // 1. Start the animation right at the beginning of the attack
+        if (animator != null)
+        {
+            animator.SetBool("isShooting", true);
+        }
+
+        // Wind-up delay
         yield return new WaitForSeconds(startDelay);
 
-        // 2. Fire the projectiles
+        // Fire the projectiles
         for (int i = 0; i < projectilesToFire; i++)
         {
             if (isCancelled) yield break;
 
             if (spawner != null)
             {
-                // Calculate a random angle between -spreadAngle and +spreadAngle
                 float randomOffset = Random.Range(-spreadAngle, spreadAngle);
-
-                // Apply rotation on the Y axis (left/right) relative to its original rotation
                 spawner.transform.localRotation = originalLocalRotation * Quaternion.Euler(0f, randomOffset, 0f);
-
-                // Fire
                 spawner.SetSpawnerActive(true);
             }
 
-            // Wait for next shot
             yield return new WaitForSeconds(timeBetweenShots);
         }
 
-        // 3. Reset the spawner's rotation and allow the boss to track the player again
+        // 2. Cleanup: Reset rotation, tracking, and turn off the animation
         if (spawner != null)
         {
             spawner.transform.localRotation = originalLocalRotation;
         }
         bossAI.lookAtPlayer = true;
+
+        if (animator != null)
+        {
+            animator.SetBool("isShooting", false);
+        }
     }
 
     public override void CancelAttack()
@@ -71,10 +77,13 @@ public class Attack_StarCone : BossAttack
         if (spawner != null)
         {
             spawner.SetSpawnerActive(false);
-            
-            // Crucial: Reset the rotation here too, in case the boss gets hit 
-            // and interrupted right in the middle of a rotated shot!
             spawner.transform.localRotation = originalLocalRotation; 
+        }
+
+        // 3. Stop the animation if interrupted
+        if (animator != null)
+        {
+            animator.SetBool("isShooting", false);
         }
     }
 }

@@ -18,11 +18,9 @@ public class PlayerHealth : MonoBehaviour
     private float cooldownTimer = 0f;
 
     [Header("Invulnerability Settings")]
-    [Tooltip("Duration of i-frames after taking damage.")]
     public float invulnerabilityDuration = 1.0f;
     
     [Header("Model References")]
-    [Tooltip("Drag your 3D Model here. The script will automatically find all its renderers to make them blink.")]
     public Transform playerModel; // <--- This is the magic variable!
     
     // We use an array now so we can blink EVERY part of your 3D model

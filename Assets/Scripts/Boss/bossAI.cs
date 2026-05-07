@@ -6,24 +6,28 @@ public class BossAI : MonoBehaviour
 {
     [Header("References")]
     public Transform player;
-    public BoxCollider arenaBounds; // Defines the room
+    public BoxCollider arenaBounds; 
     private BossHealth bossHealth;
 
-    [Header("Teleport Settings")]
+    [Header("Movement Settings")]
     public float minDis = 5f;
     public float maxDis = 15f;
-    public float teleportOutTime = 1f;
-    public float teleportInTime = 1f;
+    [Tooltip("How fast the boss glides to its new position.")]
+    public float moveSpeed = 8f; 
+    
+    [Tooltip("Time the boss stands still before starting to move (Wind-up).")]
+    public float waitBeforeMove = 1f;
+    [Tooltip("Time the boss stands still after reaching its destination (Recovery).")]
+    public float waitAfterMove = 1f;
 
     [Header("Attack Settings")]
     public float waitTimeAfterAttack = 2f;
-    public List<BossAttack> attackList; // Add your modular attack scripts here in the inspector
+    public List<BossAttack> attackList; 
 
     [Header("State Flags")]
     public bool isAttacking = false;
     public bool lookAtPlayer = true;
     
-    // Coroutine tracking so we can interrupt cleanly
     private Coroutine currentCycle;
     private BossAttack currentAttackScript;
 
@@ -37,7 +41,7 @@ public class BossAI : MonoBehaviour
 
     private void Update()
     {
-        if (lookAtPlayer && player != null ) // Or keep looking while attacking, up to you!
+        if (lookAtPlayer && player != null)
         {
             LookAtPlayer();
         }
@@ -46,7 +50,7 @@ public class BossAI : MonoBehaviour
     private void LookAtPlayer()
     {
         Vector3 direction = (player.position - transform.position).normalized;
-        direction.y = 0; // Keep the boss from tilting up/down
+        direction.y = 0; 
         if (direction.sqrMagnitude > 0.01f)
         {
             Quaternion lookRotation = Quaternion.LookRotation(direction);
@@ -54,22 +58,20 @@ public class BossAI : MonoBehaviour
         }
     }
 
-    // This is the main loop
     private IEnumerator CombatCycle()
     {
-        while (true) // Infinite loop
+        while (true) 
         {
-            yield return StartCoroutine(TeleportSequence());
+            // Start the movement sequence
+            yield return StartCoroutine(MoveSequence());
 
             if (attackList.Count > 0)
             {
                 isAttacking = true;
                 
-                // Pick a random attack
                 int randomIndex = Random.Range(0, attackList.Count);
                 currentAttackScript = attackList[randomIndex];
 
-                // Wait for the attack to finish
                 yield return StartCoroutine(currentAttackScript.ExecuteAttack(this));
                 
                 isAttacking = false;
@@ -80,43 +82,41 @@ public class BossAI : MonoBehaviour
         }
     }
 
-    private IEnumerator TeleportSequence()
+    private IEnumerator MoveSequence()
     {
-        // 1. Teleport Out (Play animation/particles here later)
-        yield return new WaitForSeconds(teleportOutTime);
+        // 1. Wind-up delay before moving
+        yield return new WaitForSeconds(waitBeforeMove);
 
-        // 2. Move to new location
-        transform.position = GetValidTeleportPosition();
+        // 2. Calculate where we want to go
+        Vector3 targetPos = GetValidTargetPosition();
 
-        // 3. Teleport In (Play animation/particles here later)
-        yield return new WaitForSeconds(teleportInTime);
+        // 3. Smoothly move towards the target
+        while (Vector3.Distance(transform.position, targetPos) > 0.1f)
+        {
+            transform.position = Vector3.MoveTowards(transform.position, targetPos, moveSpeed * Time.deltaTime);
+            yield return null;
+        }
+
+        transform.position = targetPos; // Snap to final position exactly
+
+        // 4. Recovery delay after reaching the destination
+        yield return new WaitForSeconds(waitAfterMove);
 
         // Reset state
         lookAtPlayer = true;
         if (bossHealth != null)
         {
-            bossHealth.canBeHarmed = true; // Boss is vulnerable again
+            bossHealth.canBeHarmed = true; 
         }
     }
 
-    private Vector3 GetValidTeleportPosition()
+    private Vector3 GetValidTargetPosition()
     {
-        // 1. Check if references are missing
-        if (player == null)
-        {
-            Debug.LogWarning("BossAI: Teleport failed! The Player reference is not assigned in the Inspector.");
-            return transform.position;
-        }
-        if (arenaBounds == null)
-        {
-            Debug.LogWarning("BossAI: Teleport failed! The Arena Bounds reference is not assigned in the Inspector.");
-            return transform.position;
-        }
+        if (player == null || arenaBounds == null) return transform.position;
 
         Vector3 bestPos = transform.position;
         Bounds bounds = arenaBounds.bounds;
 
-        // Try up to 30 times to find a valid spot
         for (int i = 0; i < 30; i++)
         {
             float randomAngle = Random.Range(0f, 360f);
@@ -124,32 +124,23 @@ public class BossAI : MonoBehaviour
             
             Vector3 offset = new Vector3(Mathf.Sin(randomAngle * Mathf.Deg2Rad), 0, Mathf.Cos(randomAngle * Mathf.Deg2Rad)) * randomDistance;
             Vector3 potentialPos = player.position + offset;
-
-            // FIX: Force the Y coordinate to match the center of the arena's bounds.
-            // This prevents the check from failing just because the player is standing slightly above/below the arena floor.
             potentialPos.y = bounds.center.y;
 
             if (bounds.Contains(potentialPos))
             {
                 bestPos = potentialPos;
-                // Once a valid X/Z spot is found, reset the Y to the boss's actual height
                 bestPos.y = transform.position.y; 
                 return bestPos;
             }
         }
-        
-        // 2. Check if bounds are too small or minDis is too large
-        Debug.LogWarning("BossAI: Teleport failed! Could not find a spot inside the arena bounds after 30 tries. Your minDis/maxDis might be pushing the point outside the walls, or your BoxCollider is too small.");
         
         return bestPos;
     }
     
     public void InterruptAndForceTeleport()
     {
-        // Stop whatever the boss is currently doing
         if (currentCycle != null) StopCoroutine(currentCycle);
         
-        // Cancel the specific attack script if it's running
         if (currentAttackScript != null)
         {
             currentAttackScript.CancelAttack();
@@ -158,16 +149,13 @@ public class BossAI : MonoBehaviour
 
         isAttacking = false;
         
-        // Restart the cycle starting with a teleport
         currentCycle = StartCoroutine(CombatCycle());
     }
 
     public void HandleDeath()
     {
-        // Stop the CombatCycle and any Teleport sequences
         StopAllCoroutines(); 
         
-        // Cancel the specific attack script if one is currently firing
         if (currentAttackScript != null)
         {
             currentAttackScript.CancelAttack();

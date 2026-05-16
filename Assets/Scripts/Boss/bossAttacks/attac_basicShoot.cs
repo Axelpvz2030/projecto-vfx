@@ -5,7 +5,7 @@ public class Attack_BasicShoot : BossAttack
 {
     [Header("Attack Settings")]
     [Tooltip("Time to wait before firing the first projectile.")]
-    public float startDelay = 1.0f; // <--- NEW VARIABLE
+    public float startDelay = 1.0f; 
     public ProjectileSpawner spawner;
     public int projectilesToFire = 5;
     [Tooltip("Time between each projectile.")]

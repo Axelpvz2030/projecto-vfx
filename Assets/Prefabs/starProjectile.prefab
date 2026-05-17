@@ -106,7 +106,7 @@ GameObject:
   - component: {fileID: 183121885097659196}
   - component: {fileID: 8421465580057245409}
   m_Layer: 0
-  m_Name: simpleProjectile
+  m_Name: starProjectile
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -262,7 +262,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Hurtbox
   isActive: 1
-  damage: 0
+  damage: 1
   destroyOnContact: 1
 --- !u!1 &5952748737269239537
 GameObject:

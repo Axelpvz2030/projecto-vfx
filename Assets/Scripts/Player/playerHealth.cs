@@ -147,4 +147,8 @@ public class PlayerHealth : MonoBehaviour
         if (cc != null) cc.enabled = false;
         if (cc != null) cc.enabled = true;
     }
+
+    public float GetHealthPercentage() => currentHealth / maxHealth;
+    public float GetHealCooldownPercentage() => cooldownTimer > 0 ? cooldownTimer / healCooldown : 0f;
+    public int GetHealsRemaining() => healsRemaining;
 }

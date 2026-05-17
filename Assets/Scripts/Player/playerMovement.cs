@@ -209,4 +209,6 @@ public class PlayerMovement : MonoBehaviour
             }
         }
     }
+
+    public float GetDashCooldownPercentage() => currentCooldown > 0 ? currentCooldown / dashCooldown : 0f;
 }

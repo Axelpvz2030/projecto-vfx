@@ -45,4 +45,6 @@ public class BossHealth : MonoBehaviour
             if (ai != null) ai.InterruptAndForceTeleport();
         }
     }
+
+    public float GetHealthPercentage() => currentHealth / maxHealth;
 }

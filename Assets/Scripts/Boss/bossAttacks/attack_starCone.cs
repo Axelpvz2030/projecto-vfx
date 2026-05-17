@@ -7,12 +7,9 @@ public class Attack_StarCone : BossAttack
     public ProjectileSpawner spawner;
 
     [Header("Attack Settings")]
-    [Tooltip("Time to wait before firing the first projectile.")]
     public float startDelay = 1.0f;
     public int projectilesToFire = 10;
     public float timeBetweenShots = 0.2f;
-    
-    [Tooltip("Maximum angle (in degrees) the projectile can deviate left or right.")]
     public float spreadAngle = 30f;
 
     [Header("Animation Settings")]
@@ -25,7 +22,6 @@ public class Attack_StarCone : BossAttack
     {
         isCancelled = false;
         
-        // Save the spawner's default rotation
         if (spawner != null) 
         {
             originalLocalRotation = spawner.transform.localRotation;
@@ -33,16 +29,13 @@ public class Attack_StarCone : BossAttack
 
         bossAI.lookAtPlayer = false; 
 
-        // 1. Start the animation right at the beginning of the attack
         if (animator != null)
         {
             animator.SetBool("isShooting", true);
         }
 
-        // Wind-up delay
         yield return new WaitForSeconds(startDelay);
 
-        // Fire the projectiles
         for (int i = 0; i < projectilesToFire; i++)
         {
             if (isCancelled) yield break;
@@ -57,7 +50,6 @@ public class Attack_StarCone : BossAttack
             yield return new WaitForSeconds(timeBetweenShots);
         }
 
-        // 2. Cleanup: Reset rotation, tracking, and turn off the animation
         if (spawner != null)
         {
             spawner.transform.localRotation = originalLocalRotation;
@@ -80,7 +72,6 @@ public class Attack_StarCone : BossAttack
             spawner.transform.localRotation = originalLocalRotation; 
         }
 
-        // 3. Stop the animation if interrupted
         if (animator != null)
         {
             animator.SetBool("isShooting", false);

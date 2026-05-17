@@ -16,13 +16,12 @@ public class ProjectileMovement : MonoBehaviour
 
         if (isFlying)
         {
-            // Moves the projectile strictly forward based on its local rotation
             transform.Translate(Vector3.forward * speed * Time.deltaTime);
 
             if (timer >= flightTime)
             {
                 isFlying = false;
-                timer = 0f; // Reset timer for the stationary phase
+                timer = 0f; 
                 
                 if (lifetimeAfterFlight <= 0f) 
                 {

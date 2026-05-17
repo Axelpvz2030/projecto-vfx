@@ -7,13 +7,10 @@ using UnityEngine.InputSystem;
 public class PlayerMovement : MonoBehaviour
 {
     [Header("Camera Dependencies")]
-    [Tooltip("Arrastra el CameraManager aquí para saber qué cámara está activa.")]
     public CameraController cameraManager;
 
     [Header("Environment")]
-    [Tooltip("Drag the Arena's BoxCollider here to detect when the player falls off.")]
     public BoxCollider arenaBounds;
-    [Tooltip("How far below the arena the player must fall before dying.")]
     public float fallThreshold = 2f;
 
     [Header("Movement Settings")]
@@ -34,7 +31,7 @@ public class PlayerMovement : MonoBehaviour
     public bool isShielding = false; 
 
     private CharacterController controller;
-    private PlayerHealth playerHealth; // NEW: Reference to health for instant kills
+    private PlayerHealth playerHealth; 
     
     private Vector3 moveDirection;
     private Vector3 targetRotationDirection; 
@@ -54,7 +51,7 @@ public class PlayerMovement : MonoBehaviour
     private void Start()
     {
         controller = GetComponent<CharacterController>();
-        playerHealth = GetComponent<PlayerHealth>(); // Grab the health script
+        playerHealth = GetComponent<PlayerHealth>(); 
     }
 
     private void Update()
@@ -64,7 +61,6 @@ public class PlayerMovement : MonoBehaviour
         HandleInput();
         ApplyMovementAndRotation();
         
-        // NEW: Check if we fell off the map every frame
         CheckFallOutBounds(); 
     }
 
@@ -193,29 +189,22 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
-    // --- NEW FALL DEATH LOGIC ---
     private void CheckFallOutBounds()
     {
         if (arenaBounds != null && playerHealth != null)
         {
-            // Find the lowest point of the arena's collider
             float lowestPoint = arenaBounds.bounds.min.y;
 
-            // If the player falls past this point (plus our threshold delay)
             if (transform.position.y < lowestPoint - fallThreshold)
             {
                 Debug.Log("Player fell out of bounds!");
 
-                // 1. Temporarily disable the controller so we can force a teleport
                 controller.enabled = false;
                 
-                // 2. Move them back to the center of the arena bounds, safely above the floor
                 transform.position = new Vector3(arenaBounds.bounds.center.x, arenaBounds.bounds.max.y + 1f, arenaBounds.bounds.center.z);
                 
-                // 3. Re-enable the controller
                 controller.enabled = true;
 
-                // 4. Force instant death (bypassing any standard damage numbers)
                 playerHealth.TakeDamage(99999f); 
             }
         }

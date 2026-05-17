@@ -6,11 +6,9 @@ public class BossHealth : MonoBehaviour
     public float maxHealth = 100f;
     private float currentHealth;
     
-    [Tooltip("The set amount of damage the boss takes from any player attack.")]
     public float damagePerHit = 10f;
 
     [Header("State")]
-    [Tooltip("Controlled by AI later to determine if the boss can take damage.")]
     public bool canBeHarmed = true;
 
     private void Start()
@@ -36,17 +34,14 @@ public class BossHealth : MonoBehaviour
             
             if (ai != null) 
             {
-                // Force the AI to stop all its loops before turning it off
                 ai.HandleDeath(); 
                 ai.enabled = false;
             }
 
-            // Deactivate this health script so it can't be hit again
             this.enabled = false; 
         }
         else
         {
-            // Only interrupt and teleport if the boss survived the hit
             if (ai != null) ai.InterruptAndForceTeleport();
         }
     }

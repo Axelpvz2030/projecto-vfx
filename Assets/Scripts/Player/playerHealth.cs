@@ -9,9 +9,7 @@ public class PlayerHealth : MonoBehaviour
     private float currentHealth;
 
     [Header("Healing Settings")]
-    [Tooltip("Maximum number of heals allowed.")]
     public int maxHeals = 3;
-    [Tooltip("Wait time between heals (in seconds).")]
     public float healCooldown = 30f;
     
     private int healsRemaining;
@@ -21,9 +19,8 @@ public class PlayerHealth : MonoBehaviour
     public float invulnerabilityDuration = 1.0f;
     
     [Header("Model References")]
-    public Transform playerModel; // <--- This is the magic variable!
+    public Transform playerModel; 
     
-    // We use an array now so we can blink EVERY part of your 3D model
     private Renderer[] targetRenderers;
     private PlayerMovement playerMovement;
 
@@ -37,7 +34,6 @@ public class PlayerHealth : MonoBehaviour
 
         playerMovement = GetComponent<PlayerMovement>();
 
-        // Grab ALL renderers attached to whatever model you dragged into the Inspector
         if (playerModel != null)
         {
             targetRenderers = playerModel.GetComponentsInChildren<Renderer>();
@@ -122,7 +118,6 @@ public class PlayerHealth : MonoBehaviour
         {
             if (targetRenderers != null)
             {
-                // Loop through every single piece of the 3D model and toggle it
                 foreach (Renderer r in targetRenderers)
                 {
                     if (r != null) r.enabled = !r.enabled;
@@ -135,7 +130,6 @@ public class PlayerHealth : MonoBehaviour
 
         if (targetRenderers != null)
         {
-            // Make sure everything is turned back on at the end
             foreach (Renderer r in targetRenderers)
             {
                 if (r != null) r.enabled = true;

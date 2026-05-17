@@ -12,7 +12,6 @@ public class ProjectileSpawner : MonoBehaviour
 
     private void Start()
     {
-        // Set model visibility based on the initial state of isActive
         if (projectileModel != null) projectileModel.SetActive(isActive);
     }
 

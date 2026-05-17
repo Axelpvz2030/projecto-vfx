@@ -9,9 +9,8 @@ public class PlayerAttack : MonoBehaviour
     public float attackDuration = 0.5f;
     
     [Header("Components")]
-    public Animator animator; // <--- NEW ANIMATOR REFERENCE
+    public Animator animator; 
 
-    // Made public so PlayerShield.cs can read it
     public bool isAttacking = false; 
     private PlayerMovement playerMovement;
 
@@ -27,7 +26,6 @@ public class PlayerAttack : MonoBehaviour
 
     private void Update()
     {
-        // Ensure you cannot attack while shielding
         bool isShielding = (playerMovement != null && playerMovement.isShielding);
 
         if (!isAttacking && !isShielding && Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
@@ -43,7 +41,6 @@ public class PlayerAttack : MonoBehaviour
         if (playerMovement != null) playerMovement.canMove = false;
         if (attackHurtbox != null) attackHurtbox.SetActive(true);
 
-        // --- NEW ANIMATOR CODE ---
         if (animator != null) animator.SetTrigger("Attack");
 
         yield return new WaitForSeconds(attackDuration);

@@ -6,9 +6,9 @@ public class Hurtbox : MonoBehaviour
     public bool isActive = true;
     public float damage = 10f;
     
-    public bool destroyOnContact = false;
+    public bool destroyOnContact = false; 
 
-   private void OnTriggerStay(Collider other)
+    private void OnTriggerStay(Collider other)
     {
         if (!isActive) return;
 
@@ -18,11 +18,12 @@ public class Hurtbox : MonoBehaviour
             
             if (playerHealth != null)
             {
+  
                 playerHealth.TakeDamage(damage);
 
                 if (destroyOnContact)
                 {
-                    Destroy(gameObject);
+                    gameObject.SetActive(false); 
                 }
             }
         }

@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections.Generic;
 
 public class ProjectileSpawner : MonoBehaviour
 {
@@ -8,11 +9,27 @@ public class ProjectileSpawner : MonoBehaviour
     public GameObject projectileModel;
     public GameObject projectilePrefab;
 
+    [Header("Pool Settings")]
+    public int poolSize = 10;
+    private List<GameObject> projectilePool;
+
     private float currentTimer = 0f;
 
     private void Start()
     {
         if (projectileModel != null) projectileModel.SetActive(isActive);
+
+        projectilePool = new List<GameObject>();
+        
+        if (projectilePrefab != null)
+        {
+            for (int i = 0; i < poolSize; i++)
+            {
+                GameObject obj = Instantiate(projectilePrefab);
+                obj.SetActive(false);
+                projectilePool.Add(obj);
+            }
+        }
     }
 
     public void SetSpawnerActive(bool state)
@@ -50,9 +67,22 @@ public class ProjectileSpawner : MonoBehaviour
 
     private void SpawnProjectile()
     {
-        if (projectilePrefab != null)
+        foreach (GameObject projectile in projectilePool)
         {
-            Instantiate(projectilePrefab, transform.position, transform.rotation);
+            if (!projectile.activeInHierarchy)
+            {
+                projectile.transform.position = transform.position;
+                projectile.transform.rotation = transform.rotation;
+                projectile.SetActive(true);
+                
+                ProjectileMovement movement = projectile.GetComponent<ProjectileMovement>();
+                if (movement != null)
+                {
+                    movement.Shoot();
+                }
+                
+                return; 
+            }
         }
     }
 }

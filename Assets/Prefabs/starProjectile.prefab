@@ -247,7 +247,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProjectileMovement
   speed: 10
-  flightTime: 6
+  flightTime: 4
   lifetimeAfterFlight: 0
 --- !u!114 &8421465580057245409
 MonoBehaviour:
@@ -262,7 +262,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Hurtbox
   isActive: 1
-  damage: 10
+  damage: 0
   destroyOnContact: 1
 --- !u!1 &5952748737269239537
 GameObject:

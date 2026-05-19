@@ -25,7 +25,7 @@ public class ProjectileMovement : MonoBehaviour
                 
                 if (lifetimeAfterFlight <= 0f) 
                 {
-                    Destroy(gameObject);
+                    gameObject.SetActive(false);
                 }
             }
         }
@@ -33,8 +33,14 @@ public class ProjectileMovement : MonoBehaviour
         {
             if (timer >= lifetimeAfterFlight)
             {
-                Destroy(gameObject);
+                gameObject.SetActive(false);
             }
         }
+    }
+
+    public void Shoot()
+    {
+        timer = 0f;
+        isFlying = true;
     }
 }

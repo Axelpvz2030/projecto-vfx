@@ -10,10 +10,13 @@ public class Attack_SwordAttack1 : BossAttack
     public Animator bossAnimator;
 
     private bool isAttacking;
+    private int currentAttackID = 0;
 
     public override IEnumerator ExecuteAttack(BossAI bossAI)
     {
         isAttacking = true;
+        currentAttackID++;
+        int myAttackID = currentAttackID; 
 
         if (bossAnimator == null)
         {
@@ -22,7 +25,8 @@ public class Attack_SwordAttack1 : BossAttack
 
         for (int i = 0; i < numberOfSpawns; i++)
         {
-            if (!isAttacking) break;
+            
+            if (!isAttacking || myAttackID != currentAttackID) break;
 
             List<ProjectileSpawner> availableSpawners = new List<ProjectileSpawner>();
             foreach (ProjectileSpawner spawner in spawners)
@@ -47,17 +51,22 @@ public class Attack_SwordAttack1 : BossAttack
             yield return new WaitForSeconds(timeBetweenSpawns);
         }
 
-        isAttacking = false;
+        if (myAttackID == currentAttackID)
+        {
+            isAttacking = false;
+        }
     }
 
     public override void CancelAttack()
     {
         isAttacking = false;
+        currentAttackID++; 
         
         foreach (ProjectileSpawner spawner in spawners)
         {
             if (spawner != null)
             {
+                
                 spawner.SetSpawnerActive(false);
             }
         }

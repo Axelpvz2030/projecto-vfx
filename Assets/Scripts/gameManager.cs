@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.InputSystem; 
 
 public class GameManager : MonoBehaviour
 {
@@ -29,6 +30,18 @@ public class GameManager : MonoBehaviour
         else
         {
             ShowMainMenu(); 
+        }
+    }
+
+    private void Update()
+    {
+        if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
+        {
+            Application.Quit();
+            
+            #if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;
+            #endif
         }
     }
 
@@ -86,7 +99,7 @@ public class GameManager : MonoBehaviour
 
     public void ReturnToMainMenu()
     {
-        autoStartGame = false; 
+        autoStartGame = false;
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 }

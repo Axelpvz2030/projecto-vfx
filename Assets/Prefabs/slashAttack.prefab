@@ -101,7 +101,7 @@ Animator:
   m_GameObject: {fileID: 4602389107166251}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: 30372ef51883db54bb6a3fd9e1be3592, type: 2}
+  m_Controller: {fileID: 9100000, guid: 5ffc3bcb51d97874882ca193a9d4ae60, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
@@ -234,7 +234,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0.1, z: 0}
-  m_LocalScale: {x: 1, y: 0.41912, z: 9.93824}
+  m_LocalScale: {x: 1, y: 0.41912, z: 19.87648}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 8577888578630136935}
@@ -298,8 +298,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SlashAttack
   spinSpeed: 200
-  spinDuration: 1
-  pauseBeforeActive: 0
+  spinDuration: 0.5
+  pauseBeforeActive: 0.2
   activeDuration: 0.5
   audioSource: {fileID: 22597150415797100}
   slashSound: {fileID: 8300000, guid: 21bb202eb6ad8b143b4ab5cbee4beab4, type: 3}
